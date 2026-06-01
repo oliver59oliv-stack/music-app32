@@ -1,0 +1,6 @@
+{
+  "name": "Musicy",
+  "description": "A high-fidelity universal music dashboard for library access, live radio, and media uploads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
