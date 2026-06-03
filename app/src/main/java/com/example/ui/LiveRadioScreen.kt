@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,27 +25,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.MusicyBottomNavigation
+import com.example.data.model.RadioDto
+import com.example.viewmodel.RadioViewModel
 
-data class RadioStation(
-    val name: String,
-    val imageUrl: String
-)
-
-val sampleStations = listOf(
-    RadioStation("977 Hits", "https://i.scdn.co/image/ab67616d0000b273b53a0df47b37f44d9f7a77e1"),
-    RadioStation("DJ Radio ...", "https://i.scdn.co/image/ab67616d0000b2734b4b2b2b2b2b2b2b2b2b2b2b"),
-    RadioStation("Dance Wa...", "https://i.scdn.co/image/ab67616d0000b273c5c5c5c5c5c5c5c5c5c5c5c5"),
-    RadioStation("1.FM Top 40", "https://i.scdn.co/image/ab67616d0000b273d6d6d6d6d6d6d6d6d6d6d6d6"),
-    RadioStation("Trance H...", "https://i.scdn.co/image/ab67616d0000b273e7e7e7e7e7e7e7e7e7e7e7e7"),
-    RadioStation("Rihanna -...", "https://i.scdn.co/image/ab67616d0000b2731872199b50b8655761a2936a"),
-    RadioStation("Rihanna 2...", "https://i.scdn.co/image/ab67616d0000b2731872199b50b8655761a2936a")
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LiveRadioScreen(onMenuClick: () -> Unit) {
+fun LiveRadioScreen(
+    onMenuClick: () -> Unit,
+    viewModel: RadioViewModel = viewModel(),
+    onRadioClick: (RadioDto) -> Unit
+) {
+    val radios by viewModel.radios.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
     Scaffold(
         containerColor = Color(0xFF0A0A0A),
         topBar = {
@@ -102,29 +100,42 @@ fun LiveRadioScreen(onMenuClick: () -> Unit) {
             MusicyBottomNavigation()
         }
     ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(sampleStations) { station ->
-                RadioStationCard(station)
+        if (isLoading && radios.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF22C55E))
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(radios) { station ->
+                    RadioStationCard(station, onClick = { onRadioClick(station) })
+                }
             }
         }
     }
 }
 
 @Composable
-fun RadioStationCard(station: RadioStation) {
+fun RadioStationCard(station: RadioDto, onClick: () -> Unit) {
     Surface(
         color = Color(0xFF1E1E1E).copy(alpha = 0.5f),
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
@@ -133,7 +144,7 @@ fun RadioStationCard(station: RadioStation) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = station.imageUrl,
+                model = station.logo ?: "",
                 contentDescription = null,
                 modifier = Modifier
                     .size(48.dp)
@@ -159,7 +170,9 @@ fun RadioStationCard(station: RadioStation) {
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "More",
                 tint = Color.White.copy(alpha = 0.4f),
-                modifier = Modifier.size(20.dp).clickable { /* TODO */ }
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable { /* TODO */ }
             )
         }
     }

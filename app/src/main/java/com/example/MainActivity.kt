@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -39,8 +40,17 @@ import androidx.navigation.compose.rememberNavController
 import com.example.ui.*
 import com.example.viewmodel.MusicViewModel
 import com.example.viewmodel.PlayerViewModel
+import com.example.viewmodel.RadioViewModel
 import kotlinx.coroutines.launch
 import com.example.ui.theme.*
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.navigation.compose.currentBackStackEntryAsState
+
+val LocalNavController = staticCompositionLocalOf<NavController?> { null }
+
+data class NavigationTab(val route: String, val label: String, val icon: ImageVector)
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
@@ -56,14 +66,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             MusicyTheme {
                 val navController = rememberNavController()
-                val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-                val scope = rememberCoroutineScope()
-                val playerViewModel: PlayerViewModel = viewModel()
-                val currentSong by playerViewModel.currentSong.collectAsStateWithLifecycle()
-                val isPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
-                val isPlayerOpen by playerViewModel.isPlayerOpen.collectAsStateWithLifecycle()
+                CompositionLocalProvider(LocalNavController provides navController) {
+                    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+                    val scope = rememberCoroutineScope()
+                    val playerViewModel: PlayerViewModel = viewModel()
+                    val currentSong by playerViewModel.currentSong.collectAsStateWithLifecycle()
+                    val isPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
+                    val isPlayerOpen by playerViewModel.isPlayerOpen.collectAsStateWithLifecycle()
 
-                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.fillMaxSize()) {
                     ModalNavigationDrawer(
                         drawerState = drawerState,
                         drawerContent = {
@@ -212,8 +223,22 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             composable(Screen.LiveRadio.route) {
+                                val radioViewModel: RadioViewModel = viewModel()
                                 LiveRadioScreen(
-                                    onMenuClick = { scope.launch { drawerState.open() } }
+                                    onMenuClick = { scope.launch { drawerState.open() } },
+                                    viewModel = radioViewModel,
+                                    onRadioClick = { radio ->
+                                        playerViewModel.playSong(
+                                            com.example.data.model.SongDto(
+                                                id = "radio_" + radio.name,
+                                                title = radio.name,
+                                                artist = "Live Radio Station",
+                                                thumb = radio.logo,
+                                                url = radio.url,
+                                                source = "radio"
+                                            )
+                                        )
+                                    }
                                 )
                             }
                             composable(Screen.AddMusic.route) {
@@ -249,6 +274,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -558,45 +584,65 @@ fun CategoryCard(
 
 @Composable
 fun MusicyBottomNavigation() {
+    val navController = LocalNavController.current
+    val currentRoute = navController?.currentBackStackEntryAsState()?.value?.destination?.route
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
             .navigationBarsPadding(),
-        color = MaterialTheme.colorScheme.secondary
+        color = Color(0xFF101010),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(64.dp, 32.dp)
+            val tabs = listOf(
+                NavigationTab("home", "Home", Icons.Default.Home),
+                NavigationTab("library", "Music", Icons.Default.LibraryMusic),
+                NavigationTab("radio", "Radio", Icons.Default.Radio),
+                NavigationTab("add_music", "Add", Icons.Default.AddCircle)
+            )
+
+            tabs.forEach { tab ->
+                val isActive = currentRoute == tab.route
+                val tintColor = if (isActive) Color(0xFF22C55E) else Color.White.copy(alpha = 0.5f)
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            if (currentRoute != tab.route) {
+                                navController?.navigate(tab.route) {
+                                    popUpTo("home") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        }
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Home, contentDescription = "Home", tint = MaterialTheme.colorScheme.onBackground)
-                    }
+                    Icon(
+                        imageVector = tab.icon,
+                        contentDescription = tab.label,
+                        tint = tintColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = tab.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = tintColor,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal
+                    )
                 }
-                Text("Home", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(Icons.Default.Explore, contentDescription = "Explore", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Explore", style = MaterialTheme.typography.labelSmall)
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(Icons.Default.Notifications, contentDescription = "Notifs", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Notifs", style = MaterialTheme.typography.labelSmall)
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(Icons.Default.Person, contentDescription = "Profile", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Profile", style = MaterialTheme.typography.labelSmall)
             }
         }
     }
