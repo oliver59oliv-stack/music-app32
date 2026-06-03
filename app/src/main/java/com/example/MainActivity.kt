@@ -71,6 +71,9 @@ class MainActivity : ComponentActivity() {
                 android.graphics.Color.TRANSPARENT
             )
         )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+        }
         setContent {
             MusicyTheme {
                 val navController = rememberNavController()
@@ -83,6 +86,30 @@ class MainActivity : ComponentActivity() {
                     val isPlayerOpen by playerViewModel.isPlayerOpen.collectAsStateWithLifecycle()
                     val currentPosition by playerViewModel.currentPosition.collectAsStateWithLifecycle()
                     val duration by playerViewModel.duration.collectAsStateWithLifecycle()
+                    val shuffleMode by playerViewModel.shuffleMode.collectAsStateWithLifecycle()
+                    val repeatMode by playerViewModel.repeatMode.collectAsStateWithLifecycle()
+
+                    // Handle back presses smoothly to control panels, drawers, and back transitions
+                    androidx.activity.compose.BackHandler(enabled = isPlayerOpen) {
+                        playerViewModel.setPlayerOpen(false)
+                    }
+
+                    androidx.activity.compose.BackHandler(enabled = drawerState.isOpen && !isPlayerOpen) {
+                        scope.launch { drawerState.close() }
+                    }
+
+                    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = currentBackStackEntry?.destination?.route
+                    val canPop = navController.previousBackStackEntry != null
+                    androidx.activity.compose.BackHandler(enabled = !isPlayerOpen && !drawerState.isOpen && currentRoute != null && currentRoute != Screen.Home.route) {
+                        if (canPop) {
+                            navController.popBackStack()
+                        } else {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        }
+                    }
 
                     Box(modifier = Modifier.fillMaxSize()) {
                     ModalNavigationDrawer(
@@ -278,8 +305,14 @@ class MainActivity : ComponentActivity() {
                             isPlaying = isPlaying,
                             currentPosition = currentPosition,
                             duration = duration,
+                            shuffleMode = shuffleMode,
+                            repeatMode = repeatMode,
                             onSeek = playerViewModel::seekTo,
                             onTogglePlay = playerViewModel::togglePlay,
+                            onToggleShuffle = playerViewModel::toggleShuffleMode,
+                            onToggleRepeat = playerViewModel::toggleRepeatMode,
+                            onPlayNext = playerViewModel::playNext,
+                            onPlayPrevious = playerViewModel::playPrevious,
                             onCollapse = { playerViewModel.setPlayerOpen(false) }
                         )
                     }

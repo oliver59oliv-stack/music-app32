@@ -1,5 +1,6 @@
 package com.example.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.SongDto
+import com.example.viewmodel.PlaybackManager
 
 @Composable
 fun MiniPlayer(song: SongDto, isPlaying: Boolean, onTogglePlay: () -> Unit, onOpen: () -> Unit) {
@@ -76,8 +78,14 @@ fun FullPlayer(
     isPlaying: Boolean,
     currentPosition: Long,
     duration: Long,
+    shuffleMode: PlaybackManager.ShuffleMode,
+    repeatMode: PlaybackManager.RepeatMode,
     onSeek: (Long) -> Unit,
     onTogglePlay: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onToggleRepeat: () -> Unit,
+    onPlayNext: () -> Unit,
+    onPlayPrevious: () -> Unit,
     onCollapse: () -> Unit
 ) {
     Column(
@@ -142,22 +150,118 @@ fun FullPlayer(
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Shuffle, contentDescription = null, tint = Color.White)
-            Icon(Icons.Default.SkipPrevious, contentDescription = null, tint = Color.White)
-            
-            IconButton(onClick = onTogglePlay, modifier = Modifier.size(64.dp).background(Color.White, CircleShape)) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.Black
-                )
+            // Shuffle/Sequential toggle
+            Surface(
+                onClick = onToggleShuffle,
+                color = Color(0xFF1E1E1E).copy(alpha = 0.5f),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                modifier = Modifier.height(48.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (shuffleMode == PlaybackManager.ShuffleMode.RANDOM) Color(0xFF22C55E) else Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = if (shuffleMode == PlaybackManager.ShuffleMode.RANDOM) "R" else "S",
+                        color = if (shuffleMode == PlaybackManager.ShuffleMode.RANDOM) Color(0xFF22C55E) else Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
             }
-            
-            Icon(Icons.Default.SkipNext, contentDescription = null, tint = Color.White)
-            Icon(Icons.Default.Repeat, contentDescription = null, tint = Color.White)
+
+            // Skip Previous
+            Surface(
+                onClick = onPlayPrevious,
+                color = Color.Transparent,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.SkipPrevious,
+                        contentDescription = "Previous",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Play/Pause button (Wide Pill-shape)
+            Surface(
+                onClick = onTogglePlay,
+                color = Color(0xFF1E1E1E),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                modifier = Modifier.width(96.dp).height(56.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            // Skip Next
+            Surface(
+                onClick = onPlayNext,
+                color = Color.Transparent,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            // Repeat toggle with A / 1 overlaid
+            Surface(
+                onClick = onToggleRepeat,
+                color = Color(0xFF1E1E1E).copy(alpha = 0.5f),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
+                modifier = Modifier.height(48.dp).width(64.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (repeatMode == PlaybackManager.RepeatMode.ONE) Color(0xFF22C55E) else Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = if (repeatMode == PlaybackManager.RepeatMode.ONE) "1" else "A",
+                        color = if (repeatMode == PlaybackManager.RepeatMode.ONE) Color(0xFF22C55E) else Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 11.sp,
+                        modifier = Modifier.offset(y = (-0.5).dp)
+                    )
+                }
+            }
         }
     }
 }

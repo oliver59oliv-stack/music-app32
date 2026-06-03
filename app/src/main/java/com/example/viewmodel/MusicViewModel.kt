@@ -19,7 +19,9 @@ class MusicViewModel : ViewModel() {
     private fun fetchSongs() {
         viewModelScope.launch {
             try {
-                _songs.value = MusicRepository.getSongs()
+                val fetchedSongs = MusicRepository.getSongs()
+                _songs.value = fetchedSongs
+                PlaybackManager.setPlaylist(fetchedSongs)
             } catch (e: Exception) {
                 // Handle error
             }
