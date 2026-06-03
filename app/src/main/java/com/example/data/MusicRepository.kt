@@ -15,4 +15,18 @@ object MusicRepository {
     suspend fun getSongs(): List<SongDto> {
         return api.getSongs()
     }
+
+    suspend fun searchYoutube(query: String): YoutubeSearchResponse {
+        return api.searchYoutube(query)
+    }
+
+    suspend fun downloadSong(url: String): Boolean {
+        return try {
+            api.downloadSong(url)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }
