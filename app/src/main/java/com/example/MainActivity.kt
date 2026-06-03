@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.SystemBarStyle
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -62,7 +63,14 @@ sealed class Screen(val route: String) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.dark(
+                android.graphics.Color.TRANSPARENT
+            )
+        )
         setContent {
             MusicyTheme {
                 val navController = rememberNavController()
@@ -73,6 +81,8 @@ class MainActivity : ComponentActivity() {
                     val currentSong by playerViewModel.currentSong.collectAsStateWithLifecycle()
                     val isPlaying by playerViewModel.isPlaying.collectAsStateWithLifecycle()
                     val isPlayerOpen by playerViewModel.isPlayerOpen.collectAsStateWithLifecycle()
+                    val currentPosition by playerViewModel.currentPosition.collectAsStateWithLifecycle()
+                    val duration by playerViewModel.duration.collectAsStateWithLifecycle()
 
                     Box(modifier = Modifier.fillMaxSize()) {
                     ModalNavigationDrawer(
@@ -266,6 +276,9 @@ class MainActivity : ComponentActivity() {
                         FullPlayer(
                             song = currentSong!!,
                             isPlaying = isPlaying,
+                            currentPosition = currentPosition,
+                            duration = duration,
+                            onSeek = playerViewModel::seekTo,
                             onTogglePlay = playerViewModel::togglePlay,
                             onCollapse = { playerViewModel.setPlayerOpen(false) }
                         )
@@ -326,10 +339,10 @@ fun HomeDashboard(navController: NavController, onMenuClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            item { Spacer(modifier = Modifier.height(4.dp)) }
 
             // Hero Card
             item {
@@ -339,9 +352,9 @@ fun HomeDashboard(navController: NavController, onMenuClick: () -> Unit) {
             item {
                 Text(
                     text = "CATEGORIES",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.5f),
-                    letterSpacing = 2.sp,
+                    letterSpacing = 1.5.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -383,7 +396,7 @@ fun HomeDashboard(navController: NavController, onMenuClick: () -> Unit) {
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(100.dp)) }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
@@ -438,14 +451,14 @@ fun HeroCard() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(240.dp)
-            .clip(RoundedCornerShape(32.dp))
+            .height(180.dp)
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(Color(0xFF0F2D1E), Color(0xFF000000))
                 )
             )
-            .padding(24.dp)
+            .padding(16.dp)
     ) {
         // Subtle Music Note in background
         Icon(
@@ -453,57 +466,57 @@ fun HeroCard() {
             contentDescription = null,
             tint = Color.White.copy(alpha = 0.05f),
             modifier = Modifier
-                .size(160.dp)
+                .size(120.dp)
                 .align(Alignment.CenterEnd)
-                .offset(x = 30.dp, y = 20.dp)
+                .offset(x = 20.dp, y = 15.dp)
         )
 
         Column(
             modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "Good vibrations,",
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.titleLarge,
                 color = Color.White,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "Your high-fidelity gateway to universal sound and rhythm.",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.7f),
                 modifier = Modifier.padding(end = 40.dp)
             )
             
             Spacer(modifier = Modifier.weight(1f))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Button(
                     onClick = { /* TODO */ },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)),
-                    shape = RoundedCornerShape(20.dp),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     modifier = Modifier.testTag("play_button")
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Play", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Play", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
 
                 Surface(
                     onClick = { /* TODO */ },
                     color = Color.Black.copy(alpha = 0.4f),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
                     modifier = Modifier.testTag("add_hero_button")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Add", color = Color.White, fontWeight = FontWeight.Bold)
+                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Add", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             }
@@ -524,22 +537,22 @@ fun CategoryCard(
     Surface(
         onClick = onClick,
         color = backgroundColor,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(16.dp),
         modifier = modifier
             .testTag(testTag)
-            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(24.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(16.dp))
     ) {
         Row(
             modifier = Modifier
-                .padding(20.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(Color.Black.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -547,27 +560,27 @@ fun CategoryCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = Color(0xFF22C55E),
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = 0.6f)
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(32.dp)
                     .border(1.dp, Color.White.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
@@ -575,7 +588,7 @@ fun CategoryCard(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = null,
                     tint = Color.White.copy(alpha = 0.3f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

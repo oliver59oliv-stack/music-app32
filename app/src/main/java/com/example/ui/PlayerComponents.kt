@@ -62,8 +62,24 @@ fun MiniPlayer(song: SongDto, isPlaying: Boolean, onTogglePlay: () -> Unit, onOp
     }
 }
 
+private fun formatTime(ms: Long): String {
+    if (ms <= 0) return "0:00"
+    val totalSeconds = ms / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return String.format("%d:%02d", minutes, seconds)
+}
+
 @Composable
-fun FullPlayer(song: SongDto, isPlaying: Boolean, onTogglePlay: () -> Unit, onCollapse: () -> Unit) {
+fun FullPlayer(
+    song: SongDto,
+    isPlaying: Boolean,
+    currentPosition: Long,
+    duration: Long,
+    onSeek: (Long) -> Unit,
+    onTogglePlay: () -> Unit,
+    onCollapse: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -102,14 +118,24 @@ fun FullPlayer(song: SongDto, isPlaying: Boolean, onTogglePlay: () -> Unit, onCo
         
         Spacer(modifier = Modifier.height(32.dp))
         
-        Slider(value = 0f, onValueChange = {})
+        Slider(
+            value = if (duration > 0f) currentPosition.toFloat() else 0f,
+            onValueChange = { value -> onSeek(value.toLong()) },
+            valueRange = 0f..(if (duration > 0f) duration.toFloat() else 1f),
+            colors = SliderDefaults.colors(
+                activeTrackColor = Color(0xFF22C55E),
+                inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                thumbColor = Color(0xFF22C55E)
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
         
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("0:00", color = Color.Gray)
-            Text("3:00", color = Color.Gray)
+            Text(formatTime(currentPosition), color = Color.Gray)
+            Text(if (duration > 0) formatTime(duration) else "Live Stream", color = Color.Gray)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
