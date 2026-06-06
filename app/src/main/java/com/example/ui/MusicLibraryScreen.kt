@@ -40,8 +40,6 @@ data class Song(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MusicLibraryScreen(
-    onBack: () -> Unit, 
-    onMenuClick: () -> Unit, 
     viewModel: MusicViewModel = viewModel(),
     onSongClick: (SongDto) -> Unit
 ) {
@@ -70,18 +68,19 @@ fun MusicLibraryScreen(
                             tint = Color(0xFF22C55E),
                             modifier = Modifier.size(24.dp)
                         )
-                        Text(
-                            text = "MUSIC LIBRARY",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp,
-                            color = Color.White
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
+                        Column {
+                            Text(
+                                text = "Music Library",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Listen to your favorite tracks",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.5f)
+                            )
+                        }
                     }
                 },
                 actions = {

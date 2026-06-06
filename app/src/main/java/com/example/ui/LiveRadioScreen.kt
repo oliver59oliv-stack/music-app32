@@ -36,7 +36,6 @@ import com.example.viewmodel.RadioViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveRadioScreen(
-    onMenuClick: () -> Unit,
     viewModel: RadioViewModel = viewModel(),
     onRadioClick: (RadioDto) -> Unit
 ) {
@@ -58,18 +57,19 @@ fun LiveRadioScreen(
                             tint = Color(0xFF22C55E),
                             modifier = Modifier.size(24.dp)
                         )
-                        Text(
-                            text = "LIVE RADIO",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 1.sp,
-                            color = Color.White
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.White)
+                        Column {
+                            Text(
+                                text = "Live Radio",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Global on-air stations",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.5f)
+                            )
+                        }
                     }
                 },
                 actions = {
