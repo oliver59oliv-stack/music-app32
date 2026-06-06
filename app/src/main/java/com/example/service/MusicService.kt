@@ -1,9 +1,13 @@
 package com.example.service
 
 import android.app.*
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.IBinder
@@ -18,6 +22,97 @@ class MusicService : Service() {
     private var mediaPlayer: MediaPlayer? = null
     private var progressJob: Job? = null
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
+    private lateinit var audioManager: AudioManager
+    private var audioFocusRequest: AudioFocusRequest? = null
+    private var isReceiverRegistered = false
+
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                pause()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                pause()
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                mediaPlayer?.let { player ->
+                    if (player.isPlaying) {
+                        player.setVolume(0.2f, 0.2f)
+                    }
+                }
+            }
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                mediaPlayer?.let { player ->
+                    player.setVolume(1.0f, 1.0f)
+                }
+            }
+        }
+    }
+
+    private val noisyReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                pause()
+            }
+        }
+    }
+
+    private fun requestAudioFocus(): Boolean {
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
+                .setAcceptsDelayedFocusGain(true)
+                .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                .build()
+            audioFocusRequest = focusRequest
+            audioManager.requestAudioFocus(focusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager.requestAudioFocus(
+                audioFocusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            ) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
+        }
+    }
+
+    private fun abandonAudioFocus() {
+        if (::audioManager.isInitialized) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                audioFocusRequest?.let {
+                    audioManager.abandonAudioFocusRequest(it)
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager.abandonAudioFocus(audioFocusChangeListener)
+            }
+        }
+    }
+
+    private fun registerNoisyReceiver() {
+        if (!isReceiverRegistered) {
+            registerReceiver(noisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+            isReceiverRegistered = true
+        }
+    }
+
+    private fun unregisterNoisyReceiver() {
+        if (isReceiverRegistered) {
+            try {
+                unregisterReceiver(noisyReceiver)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            isReceiverRegistered = false
+        }
+    }
 
     companion object {
         const val CHANNEL_ID = "musicy_playback_channel"
@@ -93,12 +188,17 @@ class MusicService : Service() {
                 )
                 setDataSource(song.url)
                 setOnPreparedListener {
-                    start()
-                    PlaybackManager.updateIsPlaying(true)
-                    val musicDuration = duration.toLong()
-                    PlaybackManager.updateDuration(if (musicDuration > 0) musicDuration else 0L)
-                    startProgressTracker()
-                    startForegroundNotification()
+                    if (requestAudioFocus()) {
+                        start()
+                        PlaybackManager.updateIsPlaying(true)
+                        val musicDuration = duration.toLong()
+                        PlaybackManager.updateDuration(if (musicDuration > 0) musicDuration else 0L)
+                        startProgressTracker()
+                        startForegroundNotification()
+                        registerNoisyReceiver()
+                    } else {
+                        PlaybackManager.updateIsPlaying(false)
+                    }
                 }
                 setOnCompletionListener {
                     if (PlaybackManager.repeatMode.value == PlaybackManager.RepeatMode.ONE) {
@@ -132,6 +232,8 @@ class MusicService : Service() {
                 updateNotification()
             }
         }
+        abandonAudioFocus()
+        unregisterNoisyReceiver()
     }
 
     private fun toggle() {
@@ -140,11 +242,16 @@ class MusicService : Service() {
                 player.pause()
                 PlaybackManager.updateIsPlaying(false)
                 progressJob?.cancel()
+                abandonAudioFocus()
+                unregisterNoisyReceiver()
             } else {
                 try {
-                    player.start()
-                    PlaybackManager.updateIsPlaying(true)
-                    startProgressTracker()
+                    if (requestAudioFocus()) {
+                        player.start()
+                        PlaybackManager.updateIsPlaying(true)
+                        startProgressTracker()
+                        registerNoisyReceiver()
+                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -260,6 +367,8 @@ class MusicService : Service() {
         mediaPlayer = null
         PlaybackManager.updateIsPlaying(false)
         stopForeground(true)
+        abandonAudioFocus()
+        unregisterNoisyReceiver()
         stopSelf()
     }
 
@@ -269,5 +378,7 @@ class MusicService : Service() {
         serviceScope.cancel()
         mediaPlayer?.release()
         mediaPlayer = null
+        abandonAudioFocus()
+        unregisterNoisyReceiver()
     }
 }

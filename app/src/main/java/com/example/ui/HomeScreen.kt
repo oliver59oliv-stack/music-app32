@@ -103,10 +103,10 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item { Spacer(modifier = Modifier.height(4.dp)) }
+            item { Spacer(modifier = Modifier.height(2.dp)) }
 
             // Premium Hero Welcome Banner Card
             item {
@@ -118,17 +118,17 @@ fun HomeScreen(
 
             // Quick Access Categories Section
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = "EXPLORE CATEGORIES",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.4f),
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp
+                        letterSpacing = 1.sp
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         CategoryShortCard(
                             title = "Music Library",
@@ -152,27 +152,27 @@ fun HomeScreen(
 
             // Featured Recommended Music (Horizontal Flow)
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = "RECOMMENDED TRACKS",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.4f),
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp
+                        letterSpacing = 1.sp
                     )
                     if (songs.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(130.dp),
+                                .height(100.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No tracks loaded", color = Color.White.copy(0.3f), fontSize = 14.sp)
+                            Text("No tracks loaded", color = Color.White.copy(0.3f), fontSize = 12.sp)
                         }
                     } else {
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(end = 16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(end = 12.dp)
                         ) {
                             items(songs.take(6)) { song ->
                                 SongRecommendationCard(song = song, onClick = { onSongClick(song) })
@@ -184,36 +184,36 @@ fun HomeScreen(
 
             // Featured Premium Live Channels (Horizontal Row)
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = "FEATURED STATIONS",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.4f),
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.5.sp
+                        letterSpacing = 1.sp
                     )
                     if (isRadioLoading && radios.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(100.dp),
+                                .height(80.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFF22C55E), modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(color = Color(0xFF22C55E), modifier = Modifier.size(20.dp))
                         }
                     } else if (radios.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(100.dp),
+                                .height(80.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No live stations available", color = Color.White.copy(0.3f), fontSize = 14.sp)
+                            Text("No live stations available", color = Color.White.copy(0.3f), fontSize = 12.sp)
                         }
                     } else {
                         LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(end = 16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(end = 12.dp)
                         ) {
                             items(radios.take(6)) { station ->
                                 RadioFeaturedCard(station = station, onClick = { onRadioClick(station) })
@@ -223,7 +223,7 @@ fun HomeScreen(
                 }
             }
 
-            item { Spacer(modifier = Modifier.height(100.dp)) }
+            item { Spacer(modifier = Modifier.height(70.dp)) }
         }
     }
 }
@@ -236,70 +236,72 @@ fun HomeHeroCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .height(120.dp)
+            .clip(RoundedCornerShape(14.dp))
             .background(
                 Brush.verticalGradient(
                     colors = listOf(Color(0xFF0F2D1E), Color(0xFF000000))
                 )
             )
-            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(20.dp))
-            .padding(18.dp)
+            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(14.dp))
+            .padding(12.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = "Enjoy Your Rhythm",
-                    fontSize = 20.sp,
+                    fontSize = 15.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "Explore high-fidelity local libraries and real-time live radio broadcast streams seamlessly in one elegant app.",
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.7f),
-                    lineHeight = 16.sp
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.65f),
+                    lineHeight = 14.sp
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = onNavigateToLibrary,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    modifier = Modifier.height(28.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
-                    Spacer(Modifier.width(6.dp))
-                    Text("Library", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Library", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                 }
 
                 Surface(
                     onClick = onNavigateToRadio,
-                    color = Color.White.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f))
+                    color = Color.White.copy(alpha = 0.08f),
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)),
+                    modifier = Modifier.height(28.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.Radio,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(13.dp)
                         )
-                        Spacer(Modifier.width(6.dp))
-                        Text("Radio Stations", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Spacer(Modifier.width(4.dp))
+                        Text("Radio Stations", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                     }
                 }
             }
@@ -319,17 +321,17 @@ fun CategoryShortCard(
     Surface(
         onClick = onClick,
         color = backgroundColor,
-        shape = RoundedCornerShape(16.dp),
-        modifier = modifier.border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(16.dp))
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.border(1.dp, Color.White.copy(alpha = 0.04f), RoundedCornerShape(12.dp))
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
                     .background(Color.Black.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -337,20 +339,20 @@ fun CategoryShortCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = Color(0xFF22C55E),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(
                     text = title,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
                 Text(
                     text = subtitle,
                     color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 11.sp,
+                    fontSize = 10.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -367,36 +369,36 @@ fun SongRecommendationCard(
     Surface(
         onClick = onClick,
         color = Color(0xFF121212),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         modifier = Modifier
-            .width(130.dp)
-            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(16.dp))
+            .width(105.dp)
+            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(12.dp))
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             AsyncImage(
                 model = song.thumb ?: "",
                 contentDescription = null,
                 modifier = Modifier
-                    .size(110.dp)
-                    .clip(RoundedCornerShape(10.dp)),
+                    .size(89.dp)
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(
                     text = song.title,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = song.artist ?: "Unknown Artist",
                     color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 10.sp,
+                    fontSize = 9.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -413,22 +415,22 @@ fun RadioFeaturedCard(
     Surface(
         onClick = onClick,
         color = Color(0xFF121212),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         modifier = Modifier
-            .width(150.dp)
-            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(14.dp))
+            .width(125.dp)
+            .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(10.dp))
     ) {
         Row(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             AsyncImage(
                 model = station.logo ?: "",
                 contentDescription = null,
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(6.dp)),
                 contentScale = ContentScale.Crop
             )
             Column(
@@ -439,14 +441,14 @@ fun RadioFeaturedCard(
                     text = station.name,
                     color = Color.White,
                     fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "Live Radio",
+                    text = "Live",
                     color = Color(0xFF22C55E),
-                    fontSize = 9.sp,
+                    fontSize = 8.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
