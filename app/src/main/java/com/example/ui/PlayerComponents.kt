@@ -23,42 +23,181 @@ import com.example.data.model.SongDto
 import com.example.viewmodel.PlaybackManager
 
 @Composable
-fun MiniPlayer(song: SongDto, isPlaying: Boolean, onTogglePlay: () -> Unit, onOpen: () -> Unit) {
+fun MiniPlayer(
+    song: SongDto,
+    isPlaying: Boolean,
+    currentPosition: Long,
+    duration: Long,
+    onSeek: (Long) -> Unit,
+    onTogglePlay: () -> Unit,
+    onPlayPrevious: () -> Unit,
+    onPlayNext: () -> Unit,
+    onOpen: () -> Unit
+) {
     Surface(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onOpen),
-        color = Color(0xFF1E1E1E),
+            .clip(RoundedCornerShape(16.dp)),
+        color = Color(0xFF161616),
         tonalElevation = 8.dp
     ) {
-        Row(
-            modifier = Modifier.padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            AsyncImage(
-                model = song.thumb,
-                contentDescription = null,
+            // Row 1: Album Art, Info, and App Brand Name
+            Row(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(song.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
-                Text(song.artist ?: "Unknown", color = Color.Gray, fontSize = 12.sp, maxLines = 1)
-            }
-            IconButton(onClick = onTogglePlay) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White
+                    .fillMaxWidth()
+                    .clickable(onClick = onOpen),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Album Art on the left
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF2E2E2E)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!song.thumb.isNullOrBlank()) {
+                        AsyncImage(
+                            model = song.thumb,
+                            contentDescription = "Artwork",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Note",
+                            tint = Color.LightGray.copy(alpha = 0.6f),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // Song Info in the middle
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = song.title,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = song.artist ?: "Unknown Artist",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        maxLines = 1
+                    )
+                }
+
+                // App Name in the top right
+                Text(
+                    text = "Music App",
+                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.Top)
                 )
             }
-            IconButton(onClick = onOpen) {
-                Icon(Icons.Default.OpenInFull, contentDescription = null, tint = Color.White)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Row 2: Progress timeline with Green active color and White round thumb
+            Slider(
+                value = if (duration > 0f) currentPosition.toFloat() else 0f,
+                onValueChange = { value -> onSeek(value.toLong()) },
+                valueRange = 0f..(if (duration > 0f) duration.toFloat() else 1f),
+                colors = SliderDefaults.colors(
+                    activeTrackColor = Color(0xFF22C55E),
+                    inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                    thumbColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(24.dp)
+            )
+
+            // Timeline Labels (Current and Total position) positioned below the seek bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = formatTime(currentPosition),
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = if (duration > 0) formatTime(duration) else "0:00",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Row 3: Control actions (Previous, Play/Pause circle, Next) centered under the timeline
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Skip Previous
+                IconButton(
+                    onClick = onPlayPrevious,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SkipPrevious,
+                        contentDescription = "Previous",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(32.dp))
+
+                // Play / Pause Circle (Vivid green circle container, black background/icon content)
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF22C55E))
+                        .clickable(onClick = onTogglePlay),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = "Play/Pause",
+                        tint = Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(32.dp))
+
+                // Skip Next
+                IconButton(
+                    onClick = onPlayNext,
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SkipNext,
+                        contentDescription = "Next",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
     }

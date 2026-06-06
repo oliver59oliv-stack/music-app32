@@ -162,7 +162,12 @@ class MainActivity : ComponentActivity() {
                                 MiniPlayer(
                                     song = currentSong!!,
                                     isPlaying = isPlaying,
+                                    currentPosition = currentPosition,
+                                    duration = duration,
+                                    onSeek = playerViewModel::seekTo,
                                     onTogglePlay = playerViewModel::togglePlay,
+                                    onPlayPrevious = playerViewModel::playPrevious,
+                                    onPlayNext = playerViewModel::playNext,
                                     onOpen = { playerViewModel.setPlayerOpen(true) }
                                 )
                             }
